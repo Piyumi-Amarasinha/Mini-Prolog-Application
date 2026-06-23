@@ -23,13 +23,29 @@ LEVEL_META = {
 SPECIES_ICONS = {'dog': '\U0001F436', 'cat': '\U0001F431', 'bird': '\U0001F426',
                   'rabbit': '\U0001F430', 'other': '\U0001F43E'}
 
-# (light mode, dark mode) - cards must use a tuple so the background actually
-# switches with the theme; a bare hex string stays fixed and leaves label
-# text (which does auto-adapt) unreadable against it in dark mode.
-CARD_COLOR = ("#CBDBF4", "#1E2F4B")  # light blue for both modes, but could be different if desired
+# Palette: https://coolors.co/palette/7400b8-6930c3-5e60ce-5390d9-4ea8de-48bfe3-56cfe1-64dfdf-72efdd-80ffdb
+# Purple -> teal gradient (P1 darkest/most saturated through P10 lightest mint).
+# Buttons/accents use the raw palette colors; cards use a light/dark tint of
+# the same hue (blended toward white/navy) so dense text stays readable, with
+# a matching heading color (deep shade in light mode, the bright hue in dark
+# mode) so titles pop against either background.
+P1, P2, P3, P4, P5 = "#7400B8", "#6930C3", "#5E60CE", "#5390D9", "#4EA8DE"
+P6, P7, P8, P9, P10 = "#48BFE3", "#56CFE1", "#64DFDF", "#72EFDD", "#80FFDB"
 
-NAV_ACTIVE_COLOR = ("#0096c7", "#48cae4")
-NAV_INACTIVE_COLOR = ("gray45", "gray60")
+INPUT_CARD_COLOR = ("#D9E7F7", "#23364F")        # tint of P4
+INPUT_TEXT_COLOR = ("#325682", "#72A4E0")
+
+BREAKDOWN_CARD_COLOR = ("#DCDCF4", "#26294C")    # tint of P3
+BREAKDOWN_TEXT_COLOR = ("#383A7C", "#7B7DD7")
+
+EXPLANATION_CARD_COLOR = ("#D7F1F9", "#204352")  # tint of P6
+EXPLANATION_TEXT_COLOR = ("#2B7388", "#69CBE8")
+
+HISTORY_CARD_COLOR = ("#DDF8F8", "#284C51")      # tint of P8
+HISTORY_TEXT_COLOR = ("#3C8686", "#80E5E5")
+
+NAV_ACTIVE_COLOR = (P4, P7)
+NAV_INACTIVE_COLOR = ("#8B86A8", "#6B6480")
 
 # (field name, Prolog predicate, question label, choices)
 QUESTIONS = [
@@ -130,11 +146,12 @@ class TriageApp(ctk.CTk):
         title_label = ctk.CTkLabel(top_frame,
                                    text="VETERINARY TRIAGE SYSTEM",
                                    font=ctk.CTkFont(size=20, weight="bold"),
-                                   text_color=("#0096c7", "#0096c7"))
+                                   text_color=(P3, P7))
         title_label.pack(side=LEFT)
 
         self.theme_switch = ctk.CTkSwitch(top_frame, text="Dark mode",
-                                          command=self.toggle_theme, font=ctk.CTkFont(size=12))
+                                          command=self.toggle_theme, font=ctk.CTkFont(size=12),
+                                          progress_color=P5)
         self.theme_switch.pack(side=RIGHT)
 
         # Plain text-style nav links (no boxed tab widget) sit right next to
@@ -167,7 +184,7 @@ class TriageApp(ctk.CTk):
         diagnosis_scroll.pack(fill=BOTH, expand=True, padx=10, pady=(0, 10))
 
         # Create a main frame to hold all inputs
-        input_frame = ctk.CTkFrame(diagnosis_scroll, corner_radius=10, fg_color=CARD_COLOR)
+        input_frame = ctk.CTkFrame(diagnosis_scroll, corner_radius=10, fg_color=INPUT_CARD_COLOR)
         input_frame.pack(fill=X, pady=10, ipady=10)
 
         for ci in range(1, 8):
@@ -176,7 +193,8 @@ class TriageApp(ctk.CTk):
 
         # --- Helper function for cleaner code ---
         def create_input_row(parent_frame, row_index, label_text, choices, on_change=None):
-            label = ctk.CTkLabel(parent_frame, text=label_text, font=ctk.CTkFont(size=14, weight="bold"))
+            label = ctk.CTkLabel(parent_frame, text=label_text, font=ctk.CTkFont(size=14, weight="bold"),
+                                 text_color=INPUT_TEXT_COLOR)
             label.grid(row=row_index, column=0, sticky="w", padx=20, pady=12)
 
             var = ctk.StringVar(value=choices[0])
@@ -209,26 +227,29 @@ class TriageApp(ctk.CTk):
 
         self.diagnose_button = ctk.CTkButton(button_row, text="Get Triage Recommendation",
                                              command=self.run_diagnosis,
-                                             font=ctk.CTkFont(size=14),
+                                             font=ctk.CTkFont(size=14, weight="bold"),
                                              corner_radius=15,
-                                             fg_color="#caf0f8",
-                                             hover_color="#ade8f4")
+                                             fg_color=P1,
+                                             hover_color=P2,
+                                             text_color="white")
         self.diagnose_button.pack(side=LEFT, padx=6, ipady=5)
 
         self.reset_button = ctk.CTkButton(button_row, text="Reset",
                                           command=self.reset_fields,
                                           font=ctk.CTkFont(size=14),
                                           corner_radius=15,
-                                          fg_color="#90e0ef",
-                                          hover_color="#48cae4")
+                                          fg_color=P5,
+                                          hover_color=P4,
+                                          text_color="white")
         self.reset_button.pack(side=LEFT, padx=6, ipady=5)
 
         self.save_button = ctk.CTkButton(button_row, text="Save Report",
                                          command=self.save_report,
                                          font=ctk.CTkFont(size=14),
                                          corner_radius=15,
-                                         fg_color="#00b4d8",
-                                         hover_color="#0096c7")
+                                         fg_color=P7,
+                                         hover_color=P6,
+                                         text_color="#10131A")
         self.save_button.pack(side=LEFT, padx=6, ipady=5)
 
         # 4. Result Display
@@ -248,7 +269,7 @@ class TriageApp(ctk.CTk):
         self.score_frame.pack(pady=(5, 0))
         self.score_label = ctk.CTkLabel(self.score_frame, text="Score: -", font=ctk.CTkFont(size=12))
         self.score_label.pack(side=LEFT, padx=(0, 10))
-        self.score_bar = ctk.CTkProgressBar(self.score_frame, width=300)
+        self.score_bar = ctk.CTkProgressBar(self.score_frame, width=300, progress_color=(P4, P7))
         self.score_bar.set(0.0)
         self.score_bar.pack(side=LEFT)
 
@@ -258,33 +279,37 @@ class TriageApp(ctk.CTk):
         cards_row.columnconfigure(0, weight=1, uniform="cards")
         cards_row.columnconfigure(1, weight=1, uniform="cards")
 
-        self.breakdown_frame = ctk.CTkFrame(cards_row, corner_radius=8, fg_color=CARD_COLOR)
+        self.breakdown_frame = ctk.CTkFrame(cards_row, corner_radius=8, fg_color=BREAKDOWN_CARD_COLOR)
         self.breakdown_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
         self.breakdown_title = ctk.CTkLabel(self.breakdown_frame, text="Severity weight breakdown",
-                                            font=ctk.CTkFont(size=12, weight="bold"))
+                                            font=ctk.CTkFont(size=12, weight="bold"),
+                                            text_color=BREAKDOWN_TEXT_COLOR)
         self.breakdown_title.pack(anchor="w", padx=16, pady=(12, 0))
         self.breakdown_text = ctk.CTkLabel(self.breakdown_frame, text="", font=ctk.CTkFont(size=11),
                                            justify=LEFT, wraplength=320)
         self.breakdown_text.pack(anchor="w", padx=16, pady=(6, 12))
 
-        self.explanation_frame = ctk.CTkFrame(cards_row, corner_radius=8, fg_color=CARD_COLOR)
+        self.explanation_frame = ctk.CTkFrame(cards_row, corner_radius=8, fg_color=EXPLANATION_CARD_COLOR)
         self.explanation_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
         self.explanation_title = ctk.CTkLabel(self.explanation_frame, text="Why this result?",
-                                              font=ctk.CTkFont(size=12, weight="bold"))
+                                              font=ctk.CTkFont(size=12, weight="bold"),
+                                              text_color=EXPLANATION_TEXT_COLOR)
         self.explanation_title.pack(anchor="w", padx=16, pady=(12, 0))
         self.explanation_text = ctk.CTkLabel(self.explanation_frame, text="", font=ctk.CTkFont(size=11),
                                              justify=LEFT, wraplength=320)
         self.explanation_text.pack(anchor="w", padx=16, pady=(6, 12))
 
         # History card
-        self.history_frame = ctk.CTkFrame(details_scroll, corner_radius=8, fg_color=CARD_COLOR)
+        self.history_frame = ctk.CTkFrame(details_scroll, corner_radius=8, fg_color=HISTORY_CARD_COLOR)
         self.history_frame.pack(pady=(8, 16), padx=10, fill=X)
         history_header = ctk.CTkFrame(self.history_frame, fg_color="transparent")
         history_header.pack(fill=X, padx=16, pady=(12, 0))
         ctk.CTkLabel(history_header, text="Diagnosis history",
-                    font=ctk.CTkFont(size=12, weight="bold")).pack(side=LEFT)
+                    font=ctk.CTkFont(size=12, weight="bold"),
+                    text_color=HISTORY_TEXT_COLOR).pack(side=LEFT)
         ctk.CTkButton(history_header, text="Clear", width=60, command=self.clear_history,
-                     font=ctk.CTkFont(size=11)).pack(side=RIGHT)
+                     font=ctk.CTkFont(size=11), fg_color=P9, hover_color=P8,
+                     text_color="#10131A").pack(side=RIGHT)
         self.history_box = ctk.CTkTextbox(self.history_frame, height=120, font=ctk.CTkFont(size=11))
         self.history_box.pack(padx=16, pady=(6, 12), fill=X)
         self.history_box.configure(state="disabled")
