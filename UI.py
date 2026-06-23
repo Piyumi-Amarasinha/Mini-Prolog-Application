@@ -225,7 +225,7 @@ class TriageApp(ctk.CTk):
         self.result_label.pack(side=LEFT)
 
         # Score display (progress bar + label)
-        self.score_frame = ctk.CTkFrame(main_scroll, fg_color="transparent")
+        self.score_frame = ctk.CTkFrame(diagnosis_scroll, fg_color="transparent")
         self.score_frame.pack(pady=(5, 0))
         self.score_label = ctk.CTkLabel(self.score_frame, text="Score: -", font=ctk.CTkFont(size=12))
         self.score_label.pack(side=LEFT, padx=(0, 10))
@@ -234,7 +234,7 @@ class TriageApp(ctk.CTk):
         self.score_bar.pack(side=LEFT)
 
         # Breakdown + Explanation side-by-side (2 columns)
-        cards_row = ctk.CTkFrame(main_scroll, fg_color="transparent")
+        cards_row = ctk.CTkFrame(details_scroll, fg_color="transparent")
         cards_row.pack(pady=(8, 0), padx=10, fill=X)
         cards_row.columnconfigure(0, weight=1, uniform="cards")
         cards_row.columnconfigure(1, weight=1, uniform="cards")
@@ -258,7 +258,7 @@ class TriageApp(ctk.CTk):
         self.explanation_text.pack(anchor="w", padx=16, pady=(6, 12))
 
         # History card
-        self.history_frame = ctk.CTkFrame(main_scroll, corner_radius=8, fg_color="#CBDBF4")
+        self.history_frame = ctk.CTkFrame(details_scroll, corner_radius=8, fg_color="#CBDBF4")
         self.history_frame.pack(pady=(8, 16), padx=10, fill=X)
         history_header = ctk.CTkFrame(self.history_frame, fg_color="transparent")
         history_header.pack(fill=X, padx=16, pady=(12, 0))
