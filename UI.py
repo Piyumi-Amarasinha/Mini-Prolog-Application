@@ -95,20 +95,23 @@ def _to_float(value, default=0.0):
         return default
 
 
-class TriageApp(ctk.CTk):
-    def __init__(self):
-        super().__init__()
+class TriageApp:
+    """Builds the Diagnosis/Details pages into an existing window.
 
-        self.title("Veterinary Triage Assistant")
-        self.geometry("820x880")
-        self.minsize(760, 600)
+    Composed into (not a base class of) the main app window, since that
+    window also owns a Home page and the shared nav bar/theme switch.
+    """
+
+    def __init__(self, master):
+        self.master = master
 
         self.last_report = None
         self.engine_ready = True
         self.prolog = None
+        self.pages = {}
 
         self._init_prolog()
-        self.create_widgets()
+        self._build_pages()
 
         if not self.engine_ready:
             self.diagnose_button.configure(state="disabled")
@@ -133,55 +136,25 @@ class TriageApp(ctk.CTk):
                 'Prolog Error',
                 f'Could not load rules.pl: {e}\nEnsure rules.pl is in the same folder as this script.')
 
-    def create_widgets(self):
+    def _build_pages(self):
+        # Two pages: "Diagnosis" holds the inputs and a quick result, "Details"
+        # holds the breakdown/explanation/history. The shared nav bar and
+        # theme switch that swap between these (and a Home page) live on the
+        # main app window in HomePage.py, not here.
+        diagnosis_scroll = ctk.CTkScrollableFrame(self.master, fg_color="transparent")
+        details_scroll = ctk.CTkScrollableFrame(self.master, fg_color="transparent")
+        self.pages["diagnosis"] = diagnosis_scroll
+        self.pages["details"] = details_scroll
 
-        # 1. System Title + theme toggle
-        top_frame = ctk.CTkFrame(self, fg_color="transparent")
-        top_frame.pack(side=TOP, fill=X, padx=20, pady=(15, 10))
-
-        self.species_icon_label = ctk.CTkLabel(top_frame, text=SPECIES_ICONS['dog'],
-                                                font=ctk.CTkFont(size=30))
-        self.species_icon_label.pack(side=LEFT, padx=(0, 8))
-
-        title_label = ctk.CTkLabel(top_frame,
-                                   text="VETERINARY TRIAGE SYSTEM",
-                                   font=ctk.CTkFont(size=20, weight="bold"),
-                                   text_color=(P3, P7))
-        title_label.pack(side=LEFT)
-
-        self.theme_switch = ctk.CTkSwitch(top_frame, text="Dark mode",
-                                          command=self.toggle_theme, font=ctk.CTkFont(size=12),
-                                          progress_color=P5)
-        self.theme_switch.pack(side=RIGHT)
-
-        # Plain text-style nav links (no boxed tab widget) sit right next to
-        # the dark mode switch and swap which page is packed below.
-        self._nav_font_active = ctk.CTkFont(size=14, weight="bold", underline=True)
-        self._nav_font_inactive = ctk.CTkFont(size=14)
-
-        self.nav_details_btn = ctk.CTkButton(top_frame, text="Details", width=80,
-                                             command=lambda: self.show_page("details"),
-                                             fg_color="transparent", hover_color=("gray85", "gray25"),
-                                             text_color=NAV_INACTIVE_COLOR, font=self._nav_font_inactive)
-        self.nav_details_btn.pack(side=RIGHT, padx=(0, 16))
-
-        self.nav_diagnosis_btn = ctk.CTkButton(top_frame, text="Diagnosis", width=80,
-                                               command=lambda: self.show_page("diagnosis"),
-                                               fg_color="transparent", hover_color=("gray85", "gray25"),
-                                               text_color=NAV_ACTIVE_COLOR, font=self._nav_font_active)
-        self.nav_diagnosis_btn.pack(side=RIGHT, padx=(0, 6))
-
-        self.status_label = ctk.CTkLabel(self, text="", text_color="#E74C3C",
+        self.status_label = ctk.CTkLabel(diagnosis_scroll, text="", text_color="#E74C3C",
                                          font=ctk.CTkFont(size=12, weight="bold"))
         self.status_label.pack(side=TOP, pady=(0, 5))
 
-        # Two pages: "Diagnosis" holds the inputs and a quick result, "Details"
-        # holds the breakdown/explanation/history - swapped via the nav links
-        # above instead of a boxed tab widget, so there's no extra background.
-        diagnosis_scroll = ctk.CTkScrollableFrame(self, fg_color="transparent")
-        details_scroll = ctk.CTkScrollableFrame(self, fg_color="transparent")
-        self.pages = {"diagnosis": diagnosis_scroll, "details": details_scroll}
-        diagnosis_scroll.pack(fill=BOTH, expand=True, padx=10, pady=(0, 10))
+        icon_row = ctk.CTkFrame(diagnosis_scroll, fg_color="transparent")
+        icon_row.pack(fill=X, pady=(0, 4))
+        self.species_icon_label = ctk.CTkLabel(icon_row, text=SPECIES_ICONS['dog'],
+                                                font=ctk.CTkFont(size=30))
+        self.species_icon_label.pack(side=LEFT)
 
         # Create a main frame to hold all inputs
         input_frame = ctk.CTkFrame(diagnosis_scroll, corner_radius=10, fg_color=INPUT_CARD_COLOR)
@@ -314,21 +287,8 @@ class TriageApp(ctk.CTk):
         self.history_box.pack(padx=16, pady=(6, 12), fill=X)
         self.history_box.configure(state="disabled")
 
-    def show_page(self, name):
-        for page in self.pages.values():
-            page.pack_forget()
-        self.pages[name].pack(fill=BOTH, expand=True, padx=10, pady=(0, 10))
-
-        active_btn = self.nav_diagnosis_btn if name == "diagnosis" else self.nav_details_btn
-        inactive_btn = self.nav_details_btn if name == "diagnosis" else self.nav_diagnosis_btn
-        active_btn.configure(text_color=NAV_ACTIVE_COLOR, font=self._nav_font_active)
-        inactive_btn.configure(text_color=NAV_INACTIVE_COLOR, font=self._nav_font_inactive)
-
     def _update_species_icon(self, species):
         self.species_icon_label.configure(text=SPECIES_ICONS.get(species, SPECIES_ICONS['other']))
-
-    def toggle_theme(self):
-        ctk.set_appearance_mode("Dark" if self.theme_switch.get() else "Light")
 
     def run_diagnosis(self):
         if not self.engine_ready:
@@ -478,8 +438,17 @@ class TriageApp(ctk.CTk):
             messagebox.showerror('Save Report', f'Could not save report: {e}')
 
 
-# Main loop setup
+# Standalone runner (for quick testing without the Home page).
+# The real entry point is HomePage.py, which embeds these pages alongside
+# a Home page and the shared nav bar/theme switch.
 
 if __name__ == "__main__":
-    app = TriageApp()
-    app.mainloop()
+    root = ctk.CTk()
+    root.title("Veterinary Triage Assistant (standalone)")
+    root.geometry("820x880")
+    root.minsize(760, 600)
+
+    app = TriageApp(root)
+    app.pages["diagnosis"].pack(fill=BOTH, expand=True, padx=10, pady=(0, 10))
+
+    root.mainloop()
