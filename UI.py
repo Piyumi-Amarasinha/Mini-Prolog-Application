@@ -347,12 +347,12 @@ class TriageApp:
         self.score_label.configure(text=f"Severity score: {percent}% (raw {score})")
         self.score_bar.set(max(0, min(100, percent)) / 100.0)
 
-        breakdown_lines = "\n".join(f"  - {label} weight: {val}" for label, val in weights.items())
-        breakdown_lines += f"\n  - Species multiplier: {multiplier}"
+        breakdown_lines = "\n\n".join(f"  - {label} weight: {val}" for label, val in weights.items())
+        breakdown_lines += f"\n\n  - Species multiplier: {multiplier}"
         self.breakdown_text.configure(text=breakdown_lines)
 
         if factors:
-            explanation_lines = "\n".join(f"  • {f}" for f in factors)
+            explanation_lines = "\n\n".join(f"  • {f}" for f in factors)
         else:
             explanation_lines = "  • No significant risk factors identified"
         self.explanation_text.configure(text=explanation_lines)
