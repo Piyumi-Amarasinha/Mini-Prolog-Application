@@ -129,11 +129,7 @@ class App(ctk.CTk):
             width=160, 
             height=38,
             command=lambda: self.show_page("diagnosis"), 
-            fg_color="white",
-            bg_color="transparent",
             hover_color="#D9E7F7", 
-            border_width=2, 
-            border_color="#000",
             text_color="#000", 
             corner_radius=22,
             font=ctk.CTkFont(size=13, weight="bold")
@@ -183,7 +179,7 @@ class App(ctk.CTk):
 
         self.update_idletasks()
         w, h = self.pages["home"].winfo_width(), self.pages["home"].winfo_height()
-        
+
         if w <= 1 or h <= 1 or (w, h) == self.last_hero_size:
             return
             
@@ -216,21 +212,20 @@ class App(ctk.CTk):
         subtext = "Rule-based triage guidance for your dog, cat, bird\nor rabbit - know how urgent their symptoms are in seconds."
         draw.text((text_x, text_y), subtext, font=body_font, fill=(0, 0, 0))
         
-        # Find Y position for Button
+        # Find Y position for Button 
         if hasattr(draw, "multiline_textbbox"):
             subtext_bbox = draw.multiline_textbbox((text_x, text_y), subtext, font=body_font)
-            button_y = subtext_bbox[3] + 25
+            button_y = subtext_bbox[3] + 80 
         else:
-            button_y = text_y + 45
+            button_y = text_y + 75 
         
         # 3. Apply the final drawn image to the UI
         ctk_img = ctk.CTkImage(light_image=gradient_img, dark_image=gradient_img, size=(w, h))
         self.hero_bg.configure(image=ctk_img)
 
-        # 4. Place the CTA button underneath the drawn text
-        self.cta_button.place(x=text_x, y=button_y)
-        self.cta_button.lift()  # CTkLabel redraws its own canvas on configure()
-                                 # above, which can otherwise cover this sibling
+        # 4. Place the CTA button underneath the drawn text.
+        self.cta_button.place(relx=0.062, rely=button_y / h, anchor="nw")
+        self.cta_button.lift() 
 
 if __name__ == "__main__":
     app = App()
